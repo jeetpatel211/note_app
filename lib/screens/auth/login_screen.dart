@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:notes_app/providers/auth_provider.dart';
+import 'package:notes_app/screens/home/home_screen.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -214,7 +215,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ).signInWithGoogle();
                   print(response);
                   if (response["success"]) {
-                    Navigator.pushReplacementNamed(context, "/home");
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => HomeScreen()),
+                    );
                   }
                 },
                 icon: Image.asset("assets/images/google.png", height: 22),

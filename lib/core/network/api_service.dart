@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String localIp = "http://192.168.0.107:5000";
-  static const String baseUrl = "$localIp/api";
+  static const String baseUrl = "https://server-hbka.onrender.com/api";
 
   static Future<Map<String, dynamic>> registerUser({
     required String name,
@@ -79,12 +78,25 @@ class ApiService {
     required String email,
     required String googleId,
   }) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/auth/google-login"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"name": name, "email": email, "googleId": googleId}),
-    );
+    try {
+      print("URL => $baseUrl/auth/google-login");
 
-    return jsonDecode(response.body);
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/google-login"),
+
+        headers: {"Content-Type": "application/json"},
+
+        body: jsonEncode({"name": name, "email": email, "googleId": googleId}),
+      );
+
+      print("STATUS => ${response.statusCode}");
+      print("BODY => ${response.body}");
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Google Login API Error => $e");
+
+      return {"success": false, "message": e.toString()};
+    }
   }
 }

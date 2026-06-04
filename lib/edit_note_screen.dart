@@ -39,6 +39,8 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
   }
 
   Future<void> updateNote() async {
+    if (!mounted) return;
+
     setState(() {
       isLoading = true;
     });
@@ -60,22 +62,32 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
           "Authorization": "Bearer $token",
         },
         body: jsonEncode({
-          "title": titleController.text,
+          "title": titleController.text.trim(),
           "content": jsonEncode(quillController.document.toDelta().toJson()),
           "category": selectedCategory,
         }),
       );
 
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
 
+      print(response.statusCode);
+      print(response.body);
+
       if (response.statusCode == 200) {
         Navigator.pop(context, true);
       } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Updated Failed")));
+
         print("Update failed: ${response.statusCode} → ${response.body}");
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });

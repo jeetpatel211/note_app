@@ -36,32 +36,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> fetchNotes() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+      setState(() {
+        isLoading = true;
+      });
 
-      String? token = prefs.getString("token");
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token");
+
+      print("TOKEN => $token");
 
       final response = await http.get(
         Uri.parse("${ApiService.baseUrl}/notes"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
+        headers: {"Authorization": "Bearer $token"},
       );
+
+      print("STATUS => ${response.statusCode}");
+      print("BODY => ${response.body}");
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(data);
-        print(data["notes"]);
+        if (!mounted) return;
         setState(() {
-          notes = List.from(data["notes"]);
+          notes = data["notes"];
           isLoading = false;
         });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+
+        print("Failed => ${response.body}");
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
-      print(e);
+
+      print("Fetch Notes Error => $e");
     }
   }
 
@@ -113,6 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
   //     });
   //   }
   // }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -23,6 +23,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
   Future<void> createNote() async {
     final content = jsonEncode(quillController.document.toDelta().toJson());
 
+    final plainText = quillController.document.toPlainText();
+
     if (titleController.text.trim().isEmpty ||
         quillController.document.isEmpty()) {
       ScaffoldMessenger.of(
@@ -38,7 +40,6 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-
       String? token = prefs.getString("token");
 
       final response = await http.post(
@@ -46,49 +47,54 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
 
         headers: {
           "Content-Type": "application/json",
-
           "Authorization": "Bearer $token",
         },
 
         body: jsonEncode({
           "title": titleController.text.trim(),
-
           "content": content,
-
           "category": selectedCategory,
         }),
       );
 
       print(response.statusCode);
       print(response.body);
-      print("TOKEN => $token");
+      // print("TOKEN => $token");
+
+      if (!mounted) return;
 
       setState(() {
         isLoading = false;
       });
 
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Note Created")));
-
         Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to create note")));
+        return;
       }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed: ${response.body}")));
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
 
-      print(e);
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
+
+      print("Create Note Error: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    quillController.dispose();
+    super.dispose();
   }
 
   @override
